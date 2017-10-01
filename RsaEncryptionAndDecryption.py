@@ -1,140 +1,189 @@
-import random
-from math import *
+# RSA ENCRYPTION AND DECRYPTION PROGRAM
+# Project started: 11 February 2017
+# Project completed: 11 February 2017
+# Project by Aditya Putravu
 
+
+# Libraries required for the program
+import random
+import math
 
 class Rsa:
 
-    def __init__(self):
-        self.__name__ = 'second'
-        self.p, self.q = self.finding_p_and_q()
-        self.n = self.p * self.q
-        self.phi = (self.p - 1) * (self.q - 1)
-        self.e = 0
+    def __init__(self, e=0, d=0, n=0, p=23, q=47):
 
-    def is_prime(self, n):
-        for i in range(2,int(n**0.5)+1):
-            if n%i == 0:
-                return False
+        # Hard coding the e, d and n values and lists
 
-        return True
+        self.e = e
+        self.n = n
+        self.d = d
 
-    def mod_reverse(self, phi, e):
-        pos00 = self.phi
-        pos01 = self.phi
-        pos10 = self.e
-        pos11 = 1
-        newpos10 = 0
-
-        a =0
-
-        while newpos10 != 1:
-            # print('Doing mod thingy', a)
-            pos00pos10int = floor(pos00 / pos10)
-            inttimespos10 = pos00pos10int * pos10
-            inttimespos11 = pos00pos10int * pos11
-
-            newpos10 = pos00 - inttimespos10
-            newpos11 = pos01 - inttimespos11
-            if newpos10 < 0:
-                newpos10 %= phi
-            if newpos11 < 0:
-                newpos11 %= phi
-
-            pos00 = pos10
-            pos01 = pos11
-            pos10 = newpos10
-            pos11 = newpos11
-
-            # print(pos00, pos10, pos01, pos11)
-            # print(newpos10, newpos11)
-            if newpos10 == 1:
-                break
-            a+=1
-
-        return newpos11
-
-    def encrypt_msg(self, msg, n, e):
-        msg = list(map(str, msg))
-        ascii = []
-        encrypted = []
-        print("Encrypt ran")
-        for char in msg:
-            ascii.append(ord(char))
-
-        for char in ascii:
-            encrypted.append(str((char**e) % n))
+        self.p = p
+        self.q = q
 
 
+# Check the GCD and coprimes.py file
 
-        return ','.join(encrypted)
-
-    def decrypt_msg(self, msg, n, d):
-        msg = list(msg.split(','))
-        ascii = []
-        decrypted = []
-
-        for num in msg:
-            ascii.append(int(num)**d % n)
-
-        for char in ascii:
-            decrypted.append(chr(int(char)))
-
-        return ''.join(decrypted)
+    def gcd(self, a, b):
+        while b != 0:
+            a, b = b, a % b  # If later the b ends up as 0 the pair are
+        return a
 
     def coprime(self, a, b):
-        return gcd(a, b) == 1
+        return self.gcd(a, b) == 1  # Is it true or false
 
-    def finding_p_and_q(self):
-        a = random.randint(10,100)
-        while not self.is_prime(a):
-            a = random.randint(10,100)
+    # Encryption, decryption, and finding keys functions
+    # Also an experimental and working(?) mod function
 
-        b = random.randint(10,100)
-        while not self.is_prime(b):
-            b = random.randint(10,100)
-        return a, b
+    def en(self, tuple_e, text):
 
-    def generate_keys(self, p, q):
+        numarray = self.change_text_num(text)
 
+        new_numarray = []
 
-        # print("Phi value", self.phi)
-        # print(self.phi)
-        for i in range(self.phi):
-            # print(i, self.phi, self.is_prime(i), self.coprime(i, self.phi))
-            if self.is_prime(i) and self.coprime(i, self.phi):
-                self.e = i
-        # print(e ,'is e ')
-        self.d = self.mod_reverse(self.phi, self.e)
-        # print(self.d)
+        for i in range(len(numarray)):
+            new_numarray.append((int(numarray[i]) ** int(tuple_e[0])) % int(tuple_e[1]))  # The way to encrypt with RSA : Ciphered text
+            # Algorithm to encrypt
 
-        while self.e == self.d:
-            # print(p, q)
-            self.p, self.q = self.finding_p_and_q()
+        numarray = new_numarray  # As manipulating data while looping through it is a bad idea
 
-            while self.p == self.q:
-                self.p, self.q = self.finding_p_and_q()
-                self.n, self.e, self.d = self.generate_keys(self.p, self.q)
-        return self.phi, self.e, self.d
+        cipher = ' '.join(map(str, numarray)) # How the user sees the data
 
-# elif e != d:
-#     return n, e, d
+        return numarray, cipher  # Return numarray for error checking and ciphered text
+
+    def de(self, tuple_d, numarray):
+
+        new_numarray = []  # Create new list
+        numarray = list(map(int, numarray.split()))
+
+        for i in range(len(numarray)):
+            
+            new_numarray.append((int(numarray[i]) ** int(tuple_d[0])) % (tuple_d[1]))
+            # The way to decrypt with RSA: Deciphered text
 
 
-# p = 0
-# ,85,21,21,1221,2422,2285,85,21,1221'
+        numarray = new_numarray  # As manipulating data while looping through it is a bad idea
+
+        # print(numarray)  # Error checking
+        text, _ = self.change_num_text(numarray)  # Change the numbers to text
+
+        return numarray, text  # return the numarray for error checking and decrypted text 
+
+    def modular(self, num, mod, printanswer=False):  # If I ever forget the % symbol for mod or just for fun
+        # Imagining num = 15 and mod = 4
+        firstvar = num / mod  # Takes the 15 and divides by 3 to get decimal
+        secvar = firstvar - int(firstvar)  # Keeps the decimal remainder as it will be x/3
+        thirdvar = int((secvar * mod))  # Multiplies x by the 3 to get the whole number
+        if printanswer:
+            print(thirdvar)  # Prints out the correct answer
+    
+        return thirdvar
+
+    def finding_keys(self, p, q):
+        # P and Q are 2 primes
+
+        self.n = p * q  # Working out the n value with given primes
+
+    #   2 ways of working out phiN one with a for loop or one for bigger numbers, the formula
+
+        method = 'null'  # Just for finding which of the 2 methods implemented are being used
+
+        if self.n <= math.pow(2, 8):  # Limits how high that the number can be for this method
+            coprimes = [i for i in range(1, self.n) if self.coprime(i, self.n)]  # Kept a list instead of counter to refer to the coprimes
+
+            phiN = (len(coprimes))  # All the numbers below n and are coprimes
+
+            method = 'Forloop'  # Just for finding which of the 2 methods implemented are being used
+        else:
+            phiN = (p-1) * (q-1)  # Actual formula for finding out how many
+            method = 'Formula'  # Just for finding which of the 2 methods implemented are being used
+
+        self.e = random.randint(2, phiN)  # Hard coding e with randomised variable
+
+        while not self.coprime(self.e, self.n) or not self.coprime(self.e, phiN):
+            self.e = random.randint(2, phiN)  # Until e meets requirements re-choose e
+
+        d_values = [de for de in range(1, (5 * phiN)) if(de * self.e) % phiN == 1]  # For picking d from
+
+        self.d = random.choice(d_values[1:])  # Not including the first one as that is the same for e and is too simple
+
+    #    print(p, q, n, phiN, method, e, d, d_values)  # Error checking
+
+        return self.n, self.e, self.d  # What needs to be known
+
+    def change_text_num(self, text):
+
+        # self.text = text.lower()
+
+        textarray = []  # Clears text array
+        numarray = []  # Clears num array
 
 
+        for i in text:
+            textarray.append(i)  # Fills text array with letters of the text
 
-# n, e, d = generate_keys(p, q)
+        for i in textarray:
+            numarray.append(ord(str(i)))  # Changes the items in textarray to integers
+
+        # print(self.textarray) # Prints text array
+        # print(self.numarray) # Prints text array
+
+        return numarray  # Returns numarray because changing text to numbers
+
+    def change_num_text(self, numarray):
+
+        textarray = []  # Clears text array
+
+        for i in numarray:
+            textarray.append((chr(i)))  # Fills text array with letters converted from numarray integers
+
+        text = ""  # Clears text
+
+        for i in textarray:
+            text += str(i)  # Fills text with the appropriate letters
+
+        # print(textarray)  # Prints the array of letters
+        # print(numarray)
+        # print(text)  # Prints the text
+
+        return text, textarray  # Returns these lists
 
 
-# print(encryptMsg(msg, n, e))
-# print(decryptMsg(msg1, 3071, 227))
-#
-a = Rsa()
-p, q = a.finding_p_and_q()
-n,e,d = a.generate_keys(p, q)
-remebe = a.encrypt_msg('Hello', n, e)
-print(remebe, n, d)
-print(a.decrypt_msg('288,1005,1193,336,128,15,2087,336,1193,15,845,1824,336,1233,128,336,1233,1440,1440,747,1104,1233,1824'
-                    ,2704, 2163))
+if __name__ == '__main__':
+    print("Welcome to the RSA Ciphering program!\n  Made by Aditya Putravu")
+
+    rsa = Rsa()
+    while True:
+        try:
+            rsa.finding_keys(rsa.p, rsa.q)  # Generate keys
+
+            enc = (rsa.e, rsa.n)  # Encryption Key (Private)
+            dec = (rsa.d, rsa.n)  # Decryption Key (Public)
+
+            e_or_d = input("Would you like to encrypt or decrypt?\n <e> || <d>\n")  # Asks to encrypt or decrypt
+
+            if e_or_d.lower() == 'e':
+                text = input("What text would you like to encrypt?\n ")  # The text to encrypt
+                _, cipher = rsa.en(enc, text)  # Runs the encryption function
+                print("Ciphered text:\n" + str(cipher))  # Takes the ciphered text and gives it to user
+                print("The decryption key: ", dec)  # Prints the public decryption key
+            elif e_or_d.lower() == 'd':
+                d = int(input("What was the first number in the decryption key?\n"))
+                n = int(input("What was the second number in the decryption key?\n"))
+                dec = (d, n)  # Takes the decryption key because it always changes
+
+                cipher = input("What would you like to decrypt?\n"
+                          "<TIP: Copy and paste ciphered text (ignore space at beginning and ending)!>\n")
+
+
+                _, text = rsa.de(dec, cipher)  # Runs decryption program
+                print(text)  # Prints the decrypted message
+
+            ans = str(input("Is that all?\n<y> || <n>\n"))  # To keep program running so you don't have to re-run manually
+            if ans.lower() == 'y':
+                break
+            else:
+                continue
+        except Exception as e:  # All listings for errors
+            print("OOPS! Something went wrong!\n%s\n" % e)
+            print("\nRE-RUNNING\n")
